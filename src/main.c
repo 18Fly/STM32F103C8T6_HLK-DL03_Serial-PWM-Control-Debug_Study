@@ -1,41 +1,25 @@
-/*
- * ************************************************
- * 
- *              STM32 blink gcc demo
- * 
- *  CPU: STM32F103C8
- *  PIN: PA1
- * 
- * ************************************************
-*/
-
 #include "stm32f10x.h"
+#include "Serial.h"
+#include "atoi.h"
+#include "PWM.h"
 
-#define LED_PERIPH RCC_APB2Periph_GPIOA
-#define LED_PORT GPIOA
-#define LED_PIN GPIO_Pin_1
-
-void delay(int x)
-{
-    for (int i = 0; i < x; i++)
-    {
-        for (int j = 0; j < 1000; j++)
-            __NOP();
-    }
-}
+extern boolean RECEIVE_SIGN;
+extern struct ReceiveBuffer Buffer;
 
 int main()
 {
-    GPIO_InitTypeDef gpioDef;
-    RCC_APB2PeriphClockCmd(LED_PERIPH, ENABLE);
-    gpioDef.GPIO_Mode = GPIO_Mode_Out_PP;
-    gpioDef.GPIO_Pin = LED_PIN;
-    gpioDef.GPIO_Speed = GPIO_Speed_10MHz;
-    GPIO_Init(LED_PORT, &gpioDef);
+    Serial_Init();
+    PWM_Init();
+    PWM_SetCompare2(0);
+    int PWM_Number = 0;
 
-    while (1)
-    {
-        GPIO_WriteBit(LED_PORT, LED_PIN, (BitAction)!GPIO_ReadInputDataBit(LED_PORT, LED_PIN));
-        delay(5000);
+    while (1) {
+        if (RECEIVE_SIGN) {
+            PWM_Number = atoi(Buffer.RxBuffer, Buffer.RxIndex);
+            PWM_SetCompare2(PWM_Number);
+            Serial_SPrintf("占空比已更改为: %.1lf%%", PWM_Number / 19999.0 * 100);
+            RECEIVE_SIGN = false;
+            ResetRxData();
+        }
     }
 }
