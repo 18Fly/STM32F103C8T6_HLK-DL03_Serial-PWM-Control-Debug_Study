@@ -1,5 +1,5 @@
 {
   "MD033": {
-    "allowed_elements": ["center"]
+    "allowed_elements": ["center", "p"]
   }
 }
